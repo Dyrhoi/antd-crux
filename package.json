@@ -1,5 +1,5 @@
 {
-  "name": "my-turborepo",
+  "name": "antd-crux",
   "private": true,
   "scripts": {
     "build": "turbo run build",
