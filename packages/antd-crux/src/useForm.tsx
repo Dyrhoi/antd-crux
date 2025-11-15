@@ -8,6 +8,7 @@ export interface UseFormReturn<TParsedValues = unknown> {
   formProps: FormProps<TParsedValues>;
   register: (
     name: FormItemProps<TParsedValues>["name"],
+    formProps?: Omit<FormItemProps<TParsedValues>, "name">,
   ) => FormItemProps<TParsedValues>;
 }
 
@@ -60,27 +61,29 @@ export function useForm({
     });
   };
 
-  const register: UseFormReturn["register"] = (name) => {
+  const register: UseFormReturn["register"] = (
+    name,
+    { rules, ...rest } = {},
+  ) => {
+    // Our antd paths are always arrays of keys, so a path of user.preferences.mailing
+    // becomes ['user', 'preferences', 'mailing'].
+    const fieldPath = Array.isArray(name) ? name : [name];
+
     return {
       name: name,
       rules: [
         ({ getFieldsValue }) => ({
           validator: async () => {
-            if (!validator) return; // no-op if no validator
+            if (!validator) return Promise.resolve(); // no-op if no validator
 
             // Run full validation
             const allValues = getFieldsValue(true);
             const result = await standardValidate(validator, allValues);
             if (result.success) {
-              return; // Valid
+              return Promise.resolve();
             }
 
             // Navigate through the issues to see if path matches this field.
-
-            // Our antd paths are always arrays of keys, so a path of user.preferences.mailing
-            // becomes ['user', 'preferences', 'mailing'].
-            const fieldPath = Array.isArray(name) ? name : [name];
-
             // Luckily Standard Schema issues have paths in similar format.
             // We will have a list of Issue objects, each with a path array, so again if our ['user', 'preferences', 'mailing'] failed validation,
             // we can find an Issue with path ['user', 'preferences', 'mailing'].
@@ -96,13 +99,15 @@ export function useForm({
             });
 
             if (!matchingIssue) {
-              return; // No issues for this field
+              return Promise.resolve();
             }
 
             return Promise.reject(new Error(matchingIssue.message));
           },
         }),
+        ...(rules || []),
       ],
+      ...rest,
     };
   };
 
