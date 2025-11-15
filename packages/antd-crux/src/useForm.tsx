@@ -1,12 +1,14 @@
 import { StandardSchemaV1 } from "@standard-schema/spec";
-import { Form, FormInstance, FormProps } from "antd";
+import { Form, FormInstance, FormItemProps, FormProps } from "antd";
 import { useForm as useFormSF } from "sunflower-antd";
 import { standardValidate } from "./internal/standardSchemaValidator";
 
 export interface UseFormReturn<TParsedValues = unknown> {
   form: FormInstance<TParsedValues>;
   formProps: FormProps<TParsedValues>;
-  FormItem: typeof Form.Item<TParsedValues>;
+  register: (
+    name: FormItemProps<TParsedValues>["name"],
+  ) => FormItemProps<TParsedValues>;
 }
 
 type ImplOpts = {
@@ -32,22 +34,84 @@ export function useForm({
   onFinish: onFinishFromProps,
   validator,
 }: ImplOpts = {}): UseFormReturn<unknown> {
-  const [formAnt] = Form.useForm<unknown>();
-  const formSF = useFormSF({ form: formAnt });
+  const [_formAnt] = Form.useForm<unknown>();
+  const formSF = useFormSF({ form: _formAnt });
 
   const onFinish = async (values: unknown) => {
     if (!onFinishFromProps) return;
-    if (!validator) return onFinishFromProps(values);
-    const result = await standardValidate(validator, values);
-    return onFinishFromProps(result);
+    if (!validator) {
+      return onFinishFromProps(values);
+    }
+    return standardValidate(validator, values).then((result) => {
+      if (result.success) {
+        return onFinishFromProps(result.value);
+      }
+      const formErrors = result.issues.map((issue) => {
+        return {
+          name: issue.path?.map((segment) =>
+            typeof segment === "object" && "key" in segment
+              ? segment.key
+              : segment,
+          ),
+          errors: [issue.message],
+        };
+      });
+      formSF.form.setFields(formErrors);
+    });
+  };
+
+  const register: UseFormReturn["register"] = (name) => {
+    return {
+      name: name,
+      rules: [
+        ({ getFieldsValue }) => ({
+          validator: async () => {
+            if (!validator) return; // no-op if no validator
+
+            // Run full validation
+            const allValues = getFieldsValue(true);
+            const result = await standardValidate(validator, allValues);
+            if (result.success) {
+              return; // Valid
+            }
+
+            // Navigate through the issues to see if path matches this field.
+
+            // Our antd paths are always arrays of keys, so a path of user.preferences.mailing
+            // becomes ['user', 'preferences', 'mailing'].
+            const fieldPath = Array.isArray(name) ? name : [name];
+
+            // Luckily Standard Schema issues have paths in similar format.
+            // We will have a list of Issue objects, each with a path array, so again if our ['user', 'preferences', 'mailing'] failed validation,
+            // we can find an Issue with path ['user', 'preferences', 'mailing'].
+            const matchingIssue = result.issues.find((issue) => {
+              if (!issue.path) return false;
+              const issuePath = issue.path.map((segment) =>
+                typeof segment === "object" && "key" in segment
+                  ? segment.key
+                  : segment,
+              );
+              if (issuePath.length !== fieldPath.length) return false;
+              return issuePath.every((key, index) => key === fieldPath[index]);
+            });
+
+            if (!matchingIssue) {
+              return; // No issues for this field
+            }
+
+            return Promise.reject(new Error(matchingIssue.message));
+          },
+        }),
+      ],
+    };
   };
 
   return {
-    form: formAnt,
+    form: _formAnt,
+    register,
     formProps: {
       ...formSF.formProps,
       onFinish,
     },
-    FormItem: Form.Item,
   };
 }

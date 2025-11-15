@@ -10,6 +10,7 @@ export default defineConfig({
     typecheck: {
       enabled: true,
     },
+    dir: "./tests",
     deps: {
       optimizer: {
         client: {
