@@ -15,6 +15,7 @@ type FormListFieldName<TName> = [...NormalizeNamePath<TName>, number];
 /**
  * Type-safe getName function for FormList fields.
  * Takes a relative path within the array item and returns the full form path.
+ * @internal
  */
 type GetNameFn<TParsedValues, TName> = <
   TRelativePath extends InnerPaths<GetArrayItemType<TParsedValues, TName>>,
@@ -22,21 +23,14 @@ type GetNameFn<TParsedValues, TName> = <
   relativePath: TRelativePath,
 ) => [...FormListFieldName<TName>, ...TRelativePath];
 
-/**
- * Field data passed to FormList children, enhanced with type-safe getName helper.
- */
 export type TypedFormListFieldData<TParsedValues, TName> = Omit<
   FormListFieldData,
   "name"
 > & {
   name: number;
-  /** Get the full field path by providing a relative path within the array item */
   getName: GetNameFn<TParsedValues, TName>;
 };
 
-/**
- * Props for the typed FormList component.
- */
 export type TypedFormListProps<
   TParsedValues,
   TName extends

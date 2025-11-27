@@ -14,9 +14,6 @@ type CreateFormItemOptions = {
   requiredFields?: Array<StandardSchemaV1.Issue["path"]>;
 };
 
-/**
- * Creates a typed FormItem component with optional schema validation.
- */
 export function createFormItem<TParsedValues>(
   options: CreateFormItemOptions = {},
 ): TypedFormItemComponent<TParsedValues> {
