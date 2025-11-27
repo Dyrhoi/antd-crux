@@ -4,12 +4,6 @@ import { useForm } from "@dyrhoi/antd-crux";
 import { Button, Form, Input } from "antd";
 import z from "zod";
 
-async function isSlugAvailable({ slug }: { slug: string }) {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  const takenSlugs = ["admin", "user", "test"];
-  return !takenSlugs.includes(slug);
-}
-
 export default function UseFormExample() {
   const { formProps, FormItem } = useForm({
     validator: z.object({
@@ -19,14 +13,7 @@ export default function UseFormExample() {
       favoriteNumber: z.coerce
         .number("Favorite Number must be set and a number")
         .min(10, "Favorite Number must be at least 10"),
-      slug: z
-        .string()
-        .min(3)
-        .transform((val) => val.toLowerCase())
-        .refine(async (val) => {
-          const available = await isSlugAvailable({ slug: val });
-          return available;
-        }, "Slug is already taken"),
+      slug: z.string().trim().min(3).or(z.literal("")).optional(),
     }),
     onFinish: (values) => {
       alert(`${JSON.stringify(values, null, 2)}`);
@@ -35,20 +22,18 @@ export default function UseFormExample() {
 
   return (
     <Form {...formProps} layout="vertical">
-      <FormItem name={["username"]} label="Username" required>
+      <FormItem name={["username"]} label="Username">
         <Input />
       </FormItem>
-      <FormItem name={["favoriteNumber"]} label="Favorite Number" required>
+      <FormItem name={["favoriteNumber"]} label="Favorite Number">
         <Input />
       </FormItem>
-      <FormItem name={["slug"]} label="Slug" required>
+      <FormItem name={["slug"]} label="Slug">
         <Input />
       </FormItem>
-      <FormItem>
-        <Button type="primary" htmlType="submit">
-          Submit
-        </Button>
-      </FormItem>
+      <Button type="primary" htmlType="submit">
+        Submit
+      </Button>
     </Form>
   );
 }

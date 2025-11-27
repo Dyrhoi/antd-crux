@@ -63,4 +63,63 @@ describe("useForm", () => {
       expectTypeOf(formProps).toEqualTypeOf<FormProps<unknown>>();
     });
   });
+
+  describe("FormList getName", () => {
+    const schema = z.object({
+      users: z.array(
+        z.object({
+          email: z.string(),
+          profile: z.object({
+            firstName: z.string(),
+            lastName: z.string(),
+          }),
+        }),
+      ),
+    });
+
+    it("getName should return full path with correct types", () => {
+      const { FormList } = useForm({ validator: schema });
+
+      FormList({
+        name: "users",
+        children: (fields) => {
+          const field = fields[0];
+          if (!field) return null;
+
+          // getName should accept valid relative paths
+          const emailPath = field.getName(["email"]);
+          expectTypeOf(emailPath).toEqualTypeOf<["users", number, "email"]>();
+
+          const firstNamePath = field.getName(["profile", "firstName"]);
+          expectTypeOf(firstNamePath).toEqualTypeOf<
+            ["users", number, "profile", "firstName"]
+          >();
+
+          // name should be deprecated number (the field index)
+          expectTypeOf(field.name).toEqualTypeOf<number>();
+
+          return null;
+        },
+      });
+    });
+
+    it("getName should work with array name syntax", () => {
+      const { FormList } = useForm({ validator: schema });
+
+      FormList({
+        name: ["users"],
+        children: (fields) => {
+          const field = fields[0];
+          if (!field) return null;
+
+          const lastNamePath = field.getName(["profile", "lastName"]);
+          expectTypeOf(lastNamePath).toEqualTypeOf<
+            ["users", number, "profile", "lastName"]
+          >();
+
+          return null;
+        },
+      });
+    });
+  });
 });
