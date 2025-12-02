@@ -1,4 +1,5 @@
-import { Form, FormItemProps, FormListFieldData, FormRule } from "antd";
+import { StandardSchemaV1 } from "@standard-schema/spec";
+import { Form, FormItemProps, FormListFieldData } from "antd";
 import { createContext, ReactNode, useContext } from "react";
 import { FormListProps } from "./internal/antd-types";
 import {
@@ -7,7 +8,6 @@ import {
   NormalizeNamePath,
   SimplePathSegment,
 } from "./internal/path-types";
-import { StandardSchemaV1 } from "@standard-schema/spec";
 import { createSchemaRule } from "./internal/standardSchemaValidator";
 
 type FormListFieldName<TName> = [...NormalizeNamePath<TName>, number];

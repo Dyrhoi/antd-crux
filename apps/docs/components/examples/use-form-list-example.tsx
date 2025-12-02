@@ -20,7 +20,6 @@ export default function UseFormExample() {
           }),
         )
         .min(1, "At least one email is required")
-        // At least one email is must receive security updates
         .refine((emails) => emails.some((email) => email.updates.security), {
           message: "At least one email must receive security updates",
         }),
