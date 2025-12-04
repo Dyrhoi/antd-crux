@@ -1,8 +1,5 @@
-import { env } from "node:process";
-const isDev = env.NODE_ENV !== "production";
-
 export function warning(message: string): void {
-  if (isDev) {
+  if (process.env.NODE_ENV === "development") {
     console.warn(`[antd-crux] ${message}`);
   }
 }

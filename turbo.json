@@ -20,5 +20,6 @@
       "cache": false,
       "persistent": true
     }
-  }
+  },
+  "globalEnv": ["NODE_ENV"]
 }
