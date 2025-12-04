@@ -1,5 +1,5 @@
 import { AntDesign, StandardSchema } from "@/components/icons";
-import { Badge, BadgeProps } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 
 const sourceIconMap = [
   {
@@ -29,7 +29,7 @@ export function SourceList({ items }: SourceListProps) {
   );
 }
 
-interface SourceButtonProps extends BadgeProps {
+interface SourceButtonProps extends React.ComponentProps<typeof Badge> {
   url: string;
   name: string;
 }
