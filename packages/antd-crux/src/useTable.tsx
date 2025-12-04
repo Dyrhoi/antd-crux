@@ -7,11 +7,13 @@ import {
   ResolveFormValues,
 } from "./useForm";
 import {
+  keepPreviousData,
+  QueryKey,
   useQuery,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 // ============================================================================
 // Search Types
@@ -103,6 +105,7 @@ export interface UseTableSearchOptions<TFormValues, TData> {
   search: (
     props: SearchProps<TFormValues>,
   ) => SearchResult<TData> | Promise<SearchResult<TData>>;
+  queryKey?: QueryKey;
   queryOptions?: undefined;
 }
 
@@ -156,6 +159,9 @@ export function useTable<
 ): UseTableReturn<ResolveFormValues<TSchema, TFormValues>, TData, TError> {
   type TResolvedValues = ResolveFormValues<TSchema, TFormValues>;
   const formResult = useForm(opts) as UseFormReturn<TResolvedValues>;
+  const simpleQueryKey = useMemo(() => {
+    return ["antd-crux-table", Math.random().toString(36).substring(2, 15)];
+  }, []);
 
   const [filters, setFilters] = useState<TResolvedValues>(
     formResult.formProps.initialValues as TResolvedValues,
@@ -168,8 +174,9 @@ export function useTable<
   const tableQueryOptions = opts.queryOptions
     ? opts.queryOptions(searchProps)
     : {
-        queryKey: ["tableData", searchProps],
+        queryKey: [...(opts.queryKey ?? [simpleQueryKey]), searchProps],
         queryFn: () => opts.search!(searchProps),
+        placeholderData: keepPreviousData,
       };
 
   const query = useQuery(tableQueryOptions);
@@ -187,7 +194,7 @@ export function useTable<
     },
     tableProps: {
       dataSource: query.data?.data,
-      loading: query.isLoading,
+      loading: !query.isFetched,
     },
     query,
     filters,

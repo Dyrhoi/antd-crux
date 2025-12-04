@@ -94,7 +94,7 @@ const productsQueryOptions = createTableQueryOptions<Filters, Product>()(
 );
 
 export default function UseTableQueryOptionsExample() {
-  const { formProps, FormItem, tableProps, query, filters } = useTable({
+  const { formProps, FormItem, tableProps, query } = useTable({
     validator: schema,
     queryOptions: productsQueryOptions,
   });
@@ -122,19 +122,11 @@ export default function UseTableQueryOptionsExample() {
         </Button>
       </Form>
 
-      <Space>
-        <span style={{ color: "#888", fontSize: 12 }}>
-          {query.isFetching
-            ? "Loading..."
-            : `${query.data?.total ?? 0} results`}
-        </span>
-        {filters.category && (
-          <Tag color="blue">Category: {filters.category}</Tag>
-        )}
-      </Space>
-
       <Table
         {...tableProps}
+        title={() =>
+          query.isFetching ? "Loading..." : `${query.data?.total ?? 0} results`
+        }
         columns={[
           { title: "Name", dataIndex: "name", key: "name" },
           {

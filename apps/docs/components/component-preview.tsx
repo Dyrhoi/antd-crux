@@ -33,7 +33,7 @@ async function ComponentSource({ src }: { src: string }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border">
+    <div className="overflow-hidden rounded-xl border not-prose">
       <div className="bg-muted/20 px-16 py-8 relative border-b">
         <div className="absolute opacity-10 inset-0 h-full w-full bg-muted bg-[radial-gradient(var(--muted-foreground)_1px,transparent_1px)] bg-size-[16px_16px]"></div>
         <div className="relative z-10">
