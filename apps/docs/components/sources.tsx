@@ -19,9 +19,9 @@ interface SourceListProps {
 }
 export function SourceList({ items }: SourceListProps) {
   return (
-    <ul className="flex flex-wrap gap-2">
+    <ul className="flex flex-wrap gap-2 items-center">
       {Object.entries(items).map(([name, url]) => (
-        <li key={name}>
+        <li key={name} className="flex items-center">
           <SourceButton url={url} name={name} />
         </li>
       ))}

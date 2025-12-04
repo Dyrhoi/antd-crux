@@ -1,0 +1,111 @@
+---
+title: useTable
+description: Connect filter forms to data tables with type-safe queries and automatic state management.
+sources:
+  Ant Design - Table: https://ant.design/components/table
+  TanStack Query: https://tanstack.com/query/latest
+---
+
+<ExamplePreview src="examples/use-table-example.tsx" />
+
+## Overview
+
+`useTable` combines the power of `useForm` with [TanStack Query](https://tanstack.com/query/latest) to create a seamless connection between filter forms and data tables. It manages filter state, query execution, and table props automatically.
+
+### Key Features
+
+- **Built on useForm** - All type-safe form features from `useForm` are included
+- **Automatic query management** - Filters are synced with TanStack Query
+- **Type-safe data fetching** - Full type inference for filter values and query results
+- **Colocated query definitions** - Define query options separately with `createTableQueryOptions`
+
+## Usage
+
+{/* prettier-ignore */}
+```tsx twoslash
+import React from "react";
+
+import { Form, Input, Button, Table } from "antd";
+import { queryOptions } from "@tanstack/react-query";
+import { z } from "zod";
+import { useTable } from "@dyrhoi/antd-crux";
+
+type User = {
+  id: number;
+  name: string;
+};
+declare function fetchUsers(filters: { search?: string }): Promise<{ items: User[]; count: number }>;
+
+const schema = z.object({
+  search: z.string().optional(),
+});
+
+function UsersTable() {
+  const { formProps, FormItem, tableProps } = useTable({
+    validator: schema,
+    queryOptions: ({ filters }) =>
+      //             ^?
+      queryOptions({
+        queryKey: ["users", filters],
+        queryFn: () => fetchUsers(filters),
+        select: (data) => ({ data: data.items, total: data.count }),
+      }),
+  });
+
+  // `tableProps.dataSource` is fully typed as `User[]`
+  const dataSourceType = tableProps.dataSource;
+  //    ^?
+
+  return (
+    <div>
+      <Form {...formProps} layout="inline">
+        <FormItem name={["search"]} label="Search">
+          <Input />
+        </FormItem>
+        <Button type="primary" htmlType="submit">
+          Search
+        </Button>
+      </Form>
+
+      <Table {...tableProps} columns={[
+        {
+          title: "ID",
+          dataIndex: "id",
+          key: "id",
+        },
+        {
+          title: "Name",
+          dataIndex: "name",
+          key: "name",
+        },
+      ]} rowKey="id" />
+    </div>
+  );
+}
+```
+
+{/* prettier-ignore-end */}
+
+### Without TanStack Query
+
+If you're not using TanStack Query, you can use the simpler `search` function instead.
+
+```tsx
+const { formProps, FormItem, tableProps } = useTable({
+  validator: schema,
+  search: async ({ filters }) => {
+    const data = await fetchUsers(filters);
+    return { data: data.items, total: data.count };
+  },
+});
+```
+
+## Examples
+
+### Default `queryOptions`
+
+<ExamplePreview src="examples/use-table-example.tsx" />
+
+### Basic without TanStack Query using `search`
+
+<ExamplePreview src="examples/use-table-basic-example.tsx" />

@@ -4,6 +4,7 @@ import { ReactNode } from "react";
 import { useFormListContext } from "./FormList";
 import { SimplePathSegment } from "./internal/path-types";
 import { createSchemaRule } from "./internal/standardSchemaValidator";
+import useFormInstance from "antd/es/form/hooks/useFormInstance";
 
 export type TypedFormItemComponent<TParsedValues> = (
   props: FormItemProps<TParsedValues>,
@@ -43,8 +44,30 @@ export function createFormItem<TParsedValues>(
       }
     }
 
+    const defaultNormalize: FormItemProps<TParsedValues>["normalize"] = (
+      value,
+    ) => {
+      // The default behavior of Antd here always catches me off guard.
+      // When an Input is cleared (by using backspace), it sets the value to "" (empty string).
+      // This causes issues with schema validation where a field is optional,
+      // but an empty string is not valid for that field type (e.g., number, enum, etc).
+      // Therefore, we normalize empty strings to undefined to represent "no value".
+      // The user can override this behavior by providing their own `normalize` function.
+      if (value === "") {
+        return undefined;
+      }
+      return value;
+    };
+
     if (!validator || !name) {
-      return <Form.Item name={name} rules={rules} {...rest} />;
+      return (
+        <Form.Item
+          name={name}
+          rules={rules}
+          normalize={defaultNormalize}
+          {...rest}
+        />
+      );
     }
 
     const fieldPath = (
@@ -66,6 +89,7 @@ export function createFormItem<TParsedValues>(
         name={name}
         rules={mergedRules}
         required={required}
+        normalize={defaultNormalize}
         {...rest}
       />
     );

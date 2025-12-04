@@ -88,7 +88,7 @@ export interface UseTableReturn<
 > extends UseFormReturn<TFormValues> {
   tableProps: TableProps<TData>;
   query: UseQueryResult<SearchResult<TData>, TError>;
-  filters: TFormValues | undefined;
+  filters: TFormValues;
 }
 
 // ============================================================================

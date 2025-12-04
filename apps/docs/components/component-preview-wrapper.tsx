@@ -1,10 +1,13 @@
 "use client";
 
-import "@ant-design/v5-patch-for-react-19";
 import { App, ConfigProvider, theme as antdTheme } from "antd";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { AntdCruxProvider } from "@dyrhoi/antd-crux";
+
+const queryClient = new QueryClient();
 
 export function ComponentPreviewWrapper({
   children,
@@ -23,14 +26,20 @@ export function ComponentPreviewWrapper({
   }
 
   return (
-    <App>
-      <ConfigProvider
-        theme={{
-          algorithm: [...(theme === "dark" ? [antdTheme.darkAlgorithm] : [])],
-        }}
-      >
-        {children}
-      </ConfigProvider>
-    </App>
+    <QueryClientProvider client={queryClient}>
+      <App>
+        <AntdCruxProvider queryClient={queryClient}>
+          <ConfigProvider
+            theme={{
+              algorithm: [
+                ...(theme === "dark" ? [antdTheme.darkAlgorithm] : []),
+              ],
+            }}
+          >
+            {children}
+          </ConfigProvider>
+        </AntdCruxProvider>
+      </App>
+    </QueryClientProvider>
   );
 }
